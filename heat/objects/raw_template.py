@@ -36,6 +36,7 @@ class RawTemplate(
     fields = {
         'id': fields.StringField(),
         'files': heat_fields.JsonField(nullable=True),
+        'files_id': fields.IntegerField(nullable=True),
         'template': heat_fields.JsonField(),
         'environment': heat_fields.JsonField(),
     }
