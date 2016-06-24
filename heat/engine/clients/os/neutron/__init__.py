@@ -14,11 +14,14 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
+from oslo_log import log as logging
 from oslo_utils import uuidutils
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
+
+LOG = logging.getLogger(__name__)
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
@@ -82,6 +85,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
                           resource, name_or_id, cmd_resource):
         # tenant id in the signature is used for the memoization key,
         # that would differentiate similar resource names across tenants.
+        LOG.debug('bug201 tenant_id, resource, name_or_id, cmd_resource: %s, %s, %s, %s' % (tenant_id,
+                          resource, name_or_id, cmd_resource))
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), resource, name_or_id, cmd_resource=cmd_resource)
 

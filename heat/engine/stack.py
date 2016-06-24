@@ -439,20 +439,22 @@ class Stack(collections.Mapping):
     def _get_dependencies(resources, ignore_errors=True):
         """Return the dependency graph for a list of resources."""
         deps = dependencies.Dependencies()
+        visited_res = set()
         for res in resources:
             res.add_explicit_dependencies(deps)
-
+            visited_res.add((res.name, res.id))
             try:
                 res.add_dependencies(deps)
             except Exception as exc:
                 if not ignore_errors:
                     raise
                 else:
-                    LOG.warning(_LW('Ignoring error adding implicit '
+                    LOG.warning(_LW('bug201 Ignoring error adding implicit '
                                     'dependencies for %(res)s: %(err)s') %
                                 {'res': six.text_type(res),
                                  'err': six.text_type(exc)})
 
+        LOG.debug('bug201 resources are '+str(visited_res))
         return deps
 
     @classmethod

@@ -897,6 +897,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             if server is not None:
                 self.resource_id_set(server.id)
 
+        LOG.debug('bug201 %s completed handle_create()' % self.name)
         return server.id
 
     def check_create_complete(self, server_id):
@@ -1087,6 +1088,14 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             if res.has_interface('OS::Neutron::Subnet'):
                 subnet_net = (res.properties.get(subnet.Subnet.NETWORK_ID)
                               or res.properties.get(subnet.Subnet.NETWORK))
+                LOG.debug("bug201 os_nova_server: subnet.Subnet.NETWORK_ID "+
+                          str(res.properties.get(subnet.Subnet.NETWORK_ID)))
+                LOG.debug("bug201 os_nova_server: subnet.Subnet.NETWORK "+
+                          str(res.properties.get(subnet.Subnet.NETWORK)))
+                LOG.debug("bug201 os_nova_server: subnet_net "+
+                          str(subnet_net))
+                LOG.debug("bug201 os_nova_server: resource action, status is %s, %s " %
+                          (res.action, res.status))
                 for net in nets:
                     # worry about network_id because that could be the match
                     # assigned to the subnet as well and could have been
@@ -1095,6 +1104,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                     net_id = net.get(self.NETWORK_ID)
                     if net_id and net_id == subnet_net:
                         deps += (self, res)
+                        LOG.debug("bug201 os_nova_server implicit dep added for %s" %
+                                  str(res))
                         break
 
     def _update_flavor(self, prop_diff):

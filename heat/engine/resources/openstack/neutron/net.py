@@ -10,13 +10,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+import time
+from oslo_log import log as logging
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
+
+LOG = logging.getLogger(__name__)
 
 
 class Net(neutron.NeutronResource):
@@ -151,12 +154,13 @@ class Net(neutron.NeutronResource):
         if qos_policy:
             props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
                 qos_policy)
-
+        #time.sleep(90)
         net = self.client().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
 
         if dhcp_agent_ids:
             self._replace_dhcp_agents(dhcp_agent_ids)
+        LOG.debug('bug201 %s completed handle_create()' % self.name)
 
     def _show_resource(self):
         return self.client().show_network(

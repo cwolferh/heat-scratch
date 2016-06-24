@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
+from oslo_log import log as logging
 from oslo_utils import netutils
 
 from heat.common import exception
@@ -21,6 +24,8 @@ from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
 from heat.engine import translation
+
+LOG = logging.getLogger(__name__)
 
 
 class Subnet(neutron.NeutronResource):
@@ -360,6 +365,7 @@ class Subnet(neutron.NeutronResource):
         self._null_gateway_ip(props)
         subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
+        LOG.debug('bug201 %s completed handle_create()' % self.name)
 
     def handle_delete(self):
         try:

@@ -604,6 +604,10 @@ class Resource(object):
         """
         for dep in self.t.dependencies(self.stack):
             deps += (self, dep)
+            #if (self.has_interface('OS::Nova::Server') or
+            #    self.has_interface('OS::Neutron::Net') or
+            #    self.has_interface('OS::Neutron::Subnet')):
+            LOG.debug('bug201 %s explicit added dep %s' % (self.name,dep))
         deps += (self, None)
 
     def add_dependencies(self, deps):
