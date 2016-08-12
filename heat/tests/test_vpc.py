@@ -457,8 +457,9 @@ Resources:
 
         t = template_format.parse(self.test_template)
         tmpl = template.Template(t)
+        sid = str(uuid.uuid4())
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
-                             stack_id=str(uuid.uuid4()))
+                             stack_id=sid, root_id=sid)
         tmpl.t['Resources']['the_subnet']['Properties']['VpcId'] = 'aaaa'
         resource_defns = tmpl.resource_definitions(stack)
         rsrc = sn.Subnet('the_subnet',

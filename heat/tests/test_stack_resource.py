@@ -146,9 +146,11 @@ class StackResourceBaseTest(common.HeatTestCase):
             {'HeatTemplateFormatVersion': '2012-12-12',
              'Resources': {self.ws_resname: ws_res_snippet}})
         self.ctx = utils.dummy_context()
+        parent_stack_id = str(uuid.uuid4())
         self.parent_stack = parser.Stack(self.ctx, 'test_stack',
                                          self.empty_temp,
-                                         stack_id=str(uuid.uuid4()),
+                                         stack_id=parent_stack_id,
+                                         root_id=parent_stack_id,
                                          user_creds_id='uc123',
                                          stack_user_project_id='aprojectid')
         resource_defns = self.empty_temp.resource_definitions(
@@ -884,6 +886,7 @@ class WithTemplateTest(StackResourceBaseTest):
             parent_resource_name='test',
             user_creds_id='uc123',
             owner_id=self.parent_stack.id,
+            root_id=self.parent_stack.root_id,
             nested_depth=1,
             **tmpl_args)
 
@@ -933,6 +936,7 @@ class WithTemplateTest(StackResourceBaseTest):
             parent_resource_name='test',
             user_creds_id='uc123',
             owner_id=self.parent_stack.id,
+            root_id=self.parent_stack.root_id,
             nested_depth=1,
             **tmpl_args)
         if self.adopt_data is None:

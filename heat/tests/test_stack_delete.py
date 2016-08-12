@@ -273,7 +273,7 @@ class StackTest(common.HeatTestCase):
         self.stub_keystoneclient(fake_client=FakeKeystoneClientFail())
 
         self.stack = stack.Stack(self.ctx, 'delete_trust_nested', self.tmpl,
-                                 owner_id='owner123')
+                                 owner_id='owner123', root_id='root123')
         stack_id = self.stack.store()
 
         db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)

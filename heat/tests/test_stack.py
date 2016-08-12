@@ -476,6 +476,7 @@ class StackTest(common.HeatTestCase):
                                  tenant_id='123',
                                  stack_user_project_id='234',
                                  tags=['tag1', 'tag2'])
+        self.stack.context.tenant_id = '123'
         self.stack.store()
         info = self.stack.prepare_abandon()
         self.assertEqual('CREATE', info['action'])
@@ -581,7 +582,7 @@ class StackTest(common.HeatTestCase):
 
         # Add another, nested, stack
         stack3 = stack.Stack(self.ctx, 'stack3', self.tmpl,
-                             owner_id=stack2.id)
+                             owner_id=stack2.id, root_id=stack1.id)
         stack3.store()
 
         # Should still be 2 without show_nested
@@ -2837,6 +2838,7 @@ class StackTest(common.HeatTestCase):
                                  'test_stack', tmpl, convergence=True)
         mock_sau.return_value = True
         self.stack.id = 1
+        self.stack.root_id = 1
         self.stack.current_traversal = 1
         stack_id = self.stack.store()
         mock_sau.assert_called_once_with(mock.ANY, 1, mock.ANY, exp_trvsl=1)
@@ -2873,6 +2875,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(utils.dummy_context(),
                                  'test_stack', tmpl, convergence=True)
         self.stack.id = 1
+        self.stack.root_id = 1
         self.stack.current_traversal = 'curr-traversal'
         self.stack.store()
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')

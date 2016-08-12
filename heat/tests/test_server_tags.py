@@ -68,8 +68,9 @@ class ServerTagsTest(common.HeatTestCase):
         template = tmpl.Template(t,
                                  env=environment.Environment(
                                      {'KeyName': 'test'}))
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
         resource_defns = template.resource_definitions(self.stack)

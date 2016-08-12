@@ -91,8 +91,9 @@ class InstancesTest(common.HeatTestCase):
         t = template_format.parse(wp_template)
         tmpl = template.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
+        sid = str(uuid.uuid4())
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
-                             stack_id=str(uuid.uuid4()))
+                             stack_id=sid, root_id=sid)
         return (tmpl, stack)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):

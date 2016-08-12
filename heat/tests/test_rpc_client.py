@@ -160,6 +160,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                       args={'timeout_mins': u'30'})
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
+        call_kwargs['root_id'] = None
         call_kwargs['nested_depth'] = 0
         call_kwargs['user_creds_id'] = None
         call_kwargs['stack_user_project_id'] = None

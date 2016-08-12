@@ -237,11 +237,12 @@ class ValidateGetAttTest(common.HeatTestCase):
         env.load({u'resource_registry':
                   {u'OS::Test::FakeResource': u'OverwrittenFnGetAttType'}})
 
+        sid = str(uuid.uuid4())
         self.stack = stack.Stack(
             utils.dummy_context(), 'test_stack',
             template.Template({"HeatTemplateFormatVersion": "2012-12-12"},
                               env=env),
-            stack_id=str(uuid.uuid4()))
+            stack_id=sid, root_id=sid)
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
                                                 'OS::Test::GenericResource')
         self.rsrc = resource.Resource('test_rsrc', res_defn, self.stack)

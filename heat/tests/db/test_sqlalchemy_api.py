@@ -90,13 +90,15 @@ class SqlAlchemyTest(common.HeatTestCase):
             imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None,
-                          stack_user_project_id=None, backup=False):
+                          root_id=None, stack_user_project_id=None,
+                          backup=False):
         t = template_format.parse(wp_template)
         template = tmpl.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
         stack_id = stack_id or str(uuid.uuid4())
+        root_id = root_id or stack_id
         stack = parser.Stack(self.ctx, stack_name, template,
-                             owner_id=owner_id,
+                             owner_id=owner_id, root_id=root_id,
                              stack_user_project_id=stack_user_project_id)
         with utils.UUIDStub(stack_id):
             stack.store(backup=backup)
@@ -355,7 +357,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_nested_stack_get_by_name(self):
         stack1 = self._setup_test_stack('stack1', UUID1)[1]
         stack2 = self._setup_test_stack('stack2', UUID2,
-                                        owner_id=stack1.id)[1]
+                                        owner_id=stack1.id,
+                                        root_id=stack1.id)[1]
 
         result = db_api.stack_get_by_name(self.ctx, 'stack2')
         self.assertEqual(UUID2, result.id)
@@ -370,6 +373,7 @@ class SqlAlchemyTest(common.HeatTestCase):
                                         stack_user_project_id=UUID3)[1]
         stack2 = self._setup_test_stack('stack2', UUID2,
                                         owner_id=stack1.id,
+                                        root_id=stack1.id,
                                         stack_user_project_id=UUID3)[1]
 
         result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
@@ -472,10 +476,12 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_stack_get_all_show_nested(self):
         stack1 = self._setup_test_stack('stack1', UUID1)[1]
         stack2 = self._setup_test_stack('stack2', UUID2,
-                                        owner_id=stack1.id)[1]
+                                        owner_id=stack1.id,
+                                        root_id=stack1.id)[1]
         # Backup stack should not be returned
         stack3 = self._setup_test_stack('stack1*', UUID3,
                                         owner_id=stack1.id,
+                                        root_id=stack1.id,
                                         backup=True)[1]
 
         st_db = db_api.stack_get_all(self.ctx)
@@ -792,10 +798,10 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_stack_count_all_show_nested(self):
         stack1 = self._setup_test_stack('stack1', UUID1)[1]
         self._setup_test_stack('stack2', UUID2,
-                               owner_id=stack1.id)
+                               owner_id=stack1.id, root_id=stack1.id)
         # Backup stack should not be counted
         self._setup_test_stack('stack1*', UUID3,
-                               owner_id=stack1.id,
+                               owner_id=stack1.id, root_id=stack1.id,
                                backup=True)
 
         st_db = db_api.stack_count_all(self.ctx)

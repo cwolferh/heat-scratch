@@ -655,7 +655,7 @@ class EngineService(service.Service):
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, environment_files,
-                                           args, owner_id=None,
+                                           args, owner_id=None, root_id=None,
                                            nested_depth=0, user_creds_id=None,
                                            stack_user_project_id=None,
                                            convergence=False,
@@ -687,6 +687,7 @@ class EngineService(service.Service):
 
         stack = parser.Stack(cnxt, stack_name, tmpl,
                              owner_id=owner_id,
+                             root_id=root_id,
                              nested_depth=nested_depth,
                              user_creds_id=user_creds_id,
                              stack_user_project_id=stack_user_project_id,
@@ -761,8 +762,8 @@ class EngineService(service.Service):
 
     @context.request_context
     def create_stack(self, cnxt, stack_name, template, params, files,
-                     args, environment_files=None,
-                     owner_id=None, nested_depth=0, user_creds_id=None,
+                     args, environment_files=None, owner_id=None,
+                     root_id=None, nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None, parent_resource_name=None,
                      template_id=None):
         """Create a new stack using the template provided.
@@ -818,7 +819,7 @@ class EngineService(service.Service):
 
         stack = self._parse_template_and_validate_stack(
             cnxt, stack_name, template, params, files, environment_files,
-            args, owner_id, nested_depth, user_creds_id,
+            args, owner_id, root_id, nested_depth, user_creds_id,
             stack_user_project_id, convergence, parent_resource_name,
             template_id)
 

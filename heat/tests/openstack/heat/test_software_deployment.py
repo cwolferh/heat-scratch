@@ -165,10 +165,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
     def _create_stack(self, tmpl, cache_data=None):
+        sid = '42f6f66b-631a-44e7-8d01-e22fb54574a9'
         self.stack = parser.Stack(
             self.ctx, 'software_deployment_test_stack',
             template.Template(tmpl),
-            stack_id='42f6f66b-631a-44e7-8d01-e22fb54574a9',
+            stack_id=sid,
+            root_id=sid,
             stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591',
             cache_data=cache_data
         )

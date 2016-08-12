@@ -470,6 +470,11 @@ def stack_get_all_by_owner_id(context, owner_id):
 
 
 def stack_get_all_by_root_owner_id(context, owner_id):
+    # TODO(cwolfe) this is an odd beast that returns all stacks in a
+    # nested stack subtree if called initially where owner_id is not a
+    # root id. If realistically we only care about getting entire
+    # nested stacks (select * from stack where root_id = <id>), there
+    # is room for improvement here (probalby in the P-release).
     for stack in stack_get_all_by_owner_id(context, owner_id):
         yield stack
         for ch_st in stack_get_all_by_root_owner_id(context, stack.id):
@@ -715,13 +720,36 @@ def stack_lock_release(context, stack_id, engine_id):
         return True
 
 
+def _update_stack_root_ids(context, s_ids, root_id):
+    with context.session.begin():
+        context.session.query(models.Stack).filter(
+            models.Stack.id.in_(s_ids)
+        ).update({"root_id": root_id}, synchronize_session=False)
+
+
 def stack_get_root_id(context, stack_id):
+    # TODO(cwolfe) remove this function with release P
+    # Only stacks before Newton will not have their root_id stored
     s = stack_get(context, stack_id)
     if not s:
         return None
-    while s.owner_id:
+    if s.root_id is not None:
+        return s.root_id
+
+    # Backfill unpopulated root_id's as we iterate up from the current
+    # stack (i.e., legacy stacks)
+    s_ids = []
+    while s.owner_id is not None and s.root_id is None:
+        s_ids.append(s.id)
         s = stack_get(context, s.owner_id)
-    return s.id
+    if s.root_id is None:
+        s_ids.append(s.id)
+        root_id = s.id
+    else:
+        root_id = s.root_id
+    if len(s_ids):
+        _update_stack_root_ids(context, s_ids, root_id)
+    return root_id
 
 
 def stack_count_total_resources(context, stack_id):

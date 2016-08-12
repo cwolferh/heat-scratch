@@ -238,7 +238,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
                            env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, owner_id=None,
+                     stack.t, owner_id=None, root_id=None,
                      parent_resource=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
@@ -256,6 +256,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         db_stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertTrue(db_stack.convergence)
         self.assertEqual(result['stack_id'], db_stack.id)
+        self.assertEqual(result['stack_id'], db_stack.root_id)
         self.m.VerifyAll()
 
     def test_stack_create_enabled_convergence_engine(self):
@@ -285,6 +286,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      owner_id=old_stack.owner_id,
+                     root_id=old_stack.root_id,
                      nested_depth=old_stack.nested_depth,
                      user_creds_id=old_stack.user_creds_id,
                      stack_user_project_id=old_stack.stack_user_project_id,

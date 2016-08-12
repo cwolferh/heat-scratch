@@ -110,10 +110,12 @@ class OSDBInstanceTest(common.HeatTestCase):
     def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
         template = tmpl.Template(t)
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(),
                                   stack_name,
                                   template,
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid,
+                                  root_id=sid)
 
         instance = os_database.OSDBInstance(
             '%s_name' % name,

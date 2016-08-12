@@ -65,8 +65,8 @@ class StackCreateTest(common.HeatTestCase):
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
-            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
-            user_creds_id=None, stack_user_project_id=None,
+            self.ctx, stack_name, stk.t, owner_id=None, root_id=None,
+            nested_depth=0, user_creds_id=None, stack_user_project_id=None,
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
         if environment_files:
@@ -121,8 +121,8 @@ class StackCreateTest(common.HeatTestCase):
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
-            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
-            user_creds_id=None, stack_user_project_id=None,
+            self.ctx, stack_name, stk.t, owner_id=None, root_id=None,
+            nested_depth=0, user_creds_id=None, stack_user_project_id=None,
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
     def test_stack_create_invalid_stack_name(self):
@@ -185,8 +185,8 @@ class StackCreateTest(common.HeatTestCase):
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
-            ctx_no_pwd, stack_name, stk.t, owner_id=None, nested_depth=0,
-            user_creds_id=None, stack_user_project_id=None,
+            ctx_no_pwd, stack_name, stk.t, owner_id=None, root_id=None,
+            nested_depth=0, user_creds_id=None, stack_user_project_id=None,
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
         mock_tmpl.reset_mock()
         mock_env.reset_mock()
@@ -206,8 +206,8 @@ class StackCreateTest(common.HeatTestCase):
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
-            ctx_no_user, stack_name, stk.t, owner_id=None, nested_depth=0,
-            user_creds_id=None, stack_user_project_id=None,
+            ctx_no_user, stack_name, stk.t, owner_id=None, root_id=None,
+            nested_depth=0, user_creds_id=None, stack_user_project_id=None,
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
     @mock.patch.object(stack_object.Stack, 'count_total_resources')
@@ -240,8 +240,8 @@ class StackCreateTest(common.HeatTestCase):
         mock_tmpl.assert_called_once_with(template, files=None, env=stk.env)
         mock_env.assert_called_once_with(params)
         mock_stack.assert_called_once_with(
-            self.ctx, stack_name, stk.t, owner_id=None, nested_depth=0,
-            user_creds_id=None, stack_user_project_id=None,
+            self.ctx, stack_name, stk.t, owner_id=None, root_id=None,
+            nested_depth=0, user_creds_id=None, stack_user_project_id=None,
             convergence=cfg.CONF.convergence_engine, parent_resource=None)
 
         self.assertEqual(stk.identifier(), result)
@@ -292,8 +292,8 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_load.assert_called_once_with(self.ctx, tmpl_id)
         mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
-                                           owner_id=None, nested_depth=1,
-                                           user_creds_id=None,
+                                           owner_id=None, root_id=None,
+                                           nested_depth=1, user_creds_id=None,
                                            stack_user_project_id=None,
                                            convergence=convergence_engine,
                                            parent_resource=None)

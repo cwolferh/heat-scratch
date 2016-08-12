@@ -251,8 +251,8 @@ class EngineClient(object):
                                   args, environment_files=environment_files)
 
     def _create_stack(self, ctxt, stack_name, template, params, files,
-                      args, environment_files=None,
-                      owner_id=None, nested_depth=0, user_creds_id=None,
+                      args, environment_files=None, owner_id=None,
+                      root_id=None, nested_depth=0, user_creds_id=None,
                       stack_user_project_id=None, parent_resource_name=None,
                       template_id=None):
         """Internal interface for engine-to-engine communication via RPC.
@@ -272,7 +272,7 @@ class EngineClient(object):
                                 template=template,
                                 params=params, files=files,
                                 environment_files=environment_files,
-                                args=args, owner_id=owner_id,
+                                args=args, owner_id=owner_id, root_id=root_id,
                                 nested_depth=nested_depth,
                                 user_creds_id=user_creds_id,
                                 stack_user_project_id=stack_user_project_id,

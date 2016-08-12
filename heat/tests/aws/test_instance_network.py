@@ -204,8 +204,9 @@ class instancesTest(common.HeatTestCase):
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
         tmpl = template.Template(t,
                                  env=environment.Environment(kwargs))
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -259,8 +260,9 @@ class instancesTest(common.HeatTestCase):
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
         tmpl = template.Template(t,
                                  env=environment.Environment(kwargs))
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
 

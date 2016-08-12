@@ -67,10 +67,11 @@ class ResourceTest(common.HeatTestCase):
                        u'OS::Test::ResourceWithCustomConstraint':
                        u'ResourceWithCustomConstraint'}})
 
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
                                                     env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         self.dummy_timeout = 10
 
     def test_get_class_ok(self):
@@ -2476,10 +2477,11 @@ class ResourceDeleteRetryTest(common.HeatTestCase):
         self.env.load({u'resource_registry':
                       {u'OS::Test::GenericResource': u'GenericResourceType'}})
 
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
                                                     env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         self.num_retries = 2
         cfg.CONF.set_override('action_retry_limit', self.num_retries,
                               enforce_type=True)
@@ -2560,9 +2562,10 @@ class ResourceAdoptTest(common.HeatTestCase):
                 'foo': {'Type': 'GenericResourceType'},
             }
         })
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   tmpl,
-                                  stack_id=str(uuid.uuid4()),
+                                  stack_id=sid, root_id=sid,
                                   adopt_stack_data=json.loads(adopt_data))
         res = self.stack['foo']
         res_data = {
@@ -2587,9 +2590,10 @@ class ResourceAdoptTest(common.HeatTestCase):
                 'foo': {'Type': 'GenericResourceType'},
             }
         })
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   tmpl,
-                                  stack_id=str(uuid.uuid4()),
+                                  stack_id=sid, root_id=sid,
                                   adopt_stack_data=json.loads(adopt_data))
         res = self.stack['foo']
         res_data = {
@@ -2622,9 +2626,10 @@ class ResourceAdoptTest(common.HeatTestCase):
                 'foo': {'Type': 'GenericResourceType'},
             }
         })
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   tmpl,
-                                  stack_id=str(uuid.uuid4()),
+                                  stack_id=sid, root_id=sid,
                                   adopt_stack_data=json.loads(adopt_data))
         res = self.stack['foo']
         adopt = scheduler.TaskRunner(res.adopt, None)
@@ -3268,10 +3273,11 @@ class ResourceHookTest(common.HeatTestCase):
 
         self.env = environment.Environment()
 
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
                                                     env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
 
     def test_hook(self):
         snippet = rsrc_defn.ResourceDefinition('res',
@@ -3908,10 +3914,11 @@ class TestLiveStateUpdate(common.HeatTestCase):
                        u'OS::Test::ResourceWithCustomConstraint':
                        u'ResourceWithCustomConstraint'}})
 
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
                                                     env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
 
     def _prepare_resource_live_state(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
@@ -4028,17 +4035,19 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.dummy_timeout = 10
 
     def create_resource(self):
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(self.tmpl, env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         res = self.stack['bar']
         scheduler.TaskRunner(res.create)()
         return res
 
     def create_convergence_resource(self):
+        sid = str(uuid.uuid4())
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(self.tmpl, env=self.env),
-                                  stack_id=str(uuid.uuid4()))
+                                  stack_id=sid, root_id=sid)
         res_data = {}
         res = self.stack['bar']
         self.patchobject(res, 'lock')

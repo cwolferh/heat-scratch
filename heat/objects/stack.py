@@ -13,6 +13,9 @@
 # under the License.
 
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
 """Stack object."""
 
 from oslo_versionedobjects import base
@@ -44,6 +47,7 @@ class Stack(
         'disable_rollback': fields.BooleanField(),
         'nested_depth': fields.IntegerField(),
         'owner_id': fields.StringField(nullable=True),
+        'root_id': fields.StringField(nullable=True),
         'stack_user_project_id': fields.StringField(nullable=True),
         'tenant': fields.StringField(nullable=True),
         'timeout': fields.IntegerField(nullable=True),
@@ -79,6 +83,8 @@ class Stack(
 
     @classmethod
     def get_root_id(cls, context, stack_id):
+        """DEPRECATED. root_id is now part of the stack object."""
+        LOG.warning('CCW stack_object get_root_id')
         return db_api.stack_get_root_id(context, stack_id)
 
     @classmethod

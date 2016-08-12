@@ -277,6 +277,7 @@ class StackResource(resource.Resource):
             'args': args,
             'environment_files': None,
             'owner_id': self.stack.id,
+            'root_id': self.stack.root_id,
             'user_creds_id': self.stack.user_creds_id,
             'stack_user_project_id': stack_user_project_id,
             'nested_depth': self._child_nested_depth(),

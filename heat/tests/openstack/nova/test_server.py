@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import uuid
 
 import mock
 from neutronclient.v2_0 import client as neutronclient
@@ -226,8 +227,9 @@ class ServersTest(common.HeatTestCase):
         templ = template.Template(t,
                                   env=environment.Environment(
                                       {'key_name': 'test'}))
+        sid = str(uuid.uuid4())
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
-                             stack_id=uuidutils.generate_uuid(),
+                             stack_id=sid, root_id=sid,
                              stack_user_project_id='8888')
         return (templ, stack)
 
@@ -1101,8 +1103,9 @@ class ServersTest(common.HeatTestCase):
         templ = template.Template(t)
         self.patchobject(nova.NovaClientPlugin, '_create',
                          return_value=self.fc)
+        sid = str(uuid.uuid4())
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=sid, root_id=sid)
         resource_defns = templ.resource_definitions(stack)
         server = servers.Server('server_validate_test',
                                 resource_defns['WebServer'], stack)
@@ -3766,8 +3769,9 @@ class ServerInternalPortTest(common.HeatTestCase):
         templ = template.Template(template_format.parse(temp),
                                   env=environment.Environment(
                                       {'key_name': 'test'}))
+        sid = str(uuid.uuid4())
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
-                             stack_id=uuidutils.generate_uuid(),
+                             stack_id=sid, root_id=sid,
                              stack_user_project_id='8888')
         resource_defns = templ.resource_definitions(stack)
         server = servers.Server('server', resource_defns['server'],

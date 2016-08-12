@@ -760,6 +760,12 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertEqual('resource', fk['referred_table'])
         self.assertEqual(['id'], fk['referred_columns'])
 
+    def _check_074(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'root_id')
+        self.assertIndexExists(engine, 'stack', 'ix_stack_root_id')
+        self.assertIndexMembers(engine, 'stack', 'ix_stack_root_id',
+                                ['root_id'])
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

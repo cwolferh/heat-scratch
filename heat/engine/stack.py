@@ -120,9 +120,9 @@ class Stack(collections.Mapping):
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=None, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
-                 adopt_stack_data=None, stack_user_project_id=None,
-                 created_time=None, updated_time=None,
-                 user_creds_id=None, tenant_id=None,
+                 root_id=None, adopt_stack_data=None,
+                 stack_user_project_id=None, created_time=None,
+                 updated_time=None, user_creds_id=None, tenant_id=None,
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
@@ -157,6 +157,7 @@ class Stack(collections.Mapping):
 
         self.id = stack_id
         self.owner_id = owner_id
+        self.root_id = root_id
         self.context = context
         self.t = tmpl
         self.name = stack_name
@@ -400,9 +401,13 @@ class Stack(collections.Mapping):
         self._dependencies = None
 
     def root_stack_id(self):
-        if not self.owner_id:
-            return self.id
-        return stack_object.Stack.get_root_id(self.context, self.owner_id)
+        if self.root_id is not None:
+            return self.root_id
+        if self.id is None:
+            return None
+        self.root_id = stack_object.Stack.get_root_id(self.context,
+                                                      self.id)
+        return self.root_id
 
     def object_path_in_stack(self):
         """Return stack resources and stacks in path from the root stack.
@@ -435,10 +440,10 @@ class Stack(collections.Mapping):
     def total_resources(self, stack_id=None):
         """Return the total number of resources in a stack.
 
-        Includes nested stacks below.
+        Includes nested stacks below (or above).
         """
         if not stack_id:
-            stack_id = self.id
+            stack_id = self.root_stack_id()
         return stack_object.Stack.count_total_resources(self.context, stack_id)
 
     def _set_param_stackid(self):
@@ -581,6 +586,7 @@ class Stack(collections.Mapping):
         """
         stack = {
             'owner_id': self.owner_id,
+            'root_id': self.root_id,
             'username': self.username,
             'disable_rollback': self.disable_rollback,
             'stack_user_project_id': self.stack_user_project_id,
@@ -658,9 +664,24 @@ class Stack(collections.Mapping):
                     self.current_traversal = uuidutils.generate_uuid()
                     s['current_traversal'] = self.current_traversal
 
+            # put logic for owner_id/root_id here
             new_s = stack_object.Stack.create(self.context, s)
             self.id = new_s.id
             self.created_time = new_s.created_at
+
+        # For the top-level stack, we need to make sure to set the root_id.
+        # All other stacks should have owner_id and root_id passed to them
+        # when they are created.
+        if self.root_id is None:
+            if self.owner_id is None:
+                self.root_id = self.id
+                stack_object.Stack.update_by_id(self.context, self.id,
+                                                {'root_id': self.root_id})
+            else:
+                LOG.warning(
+                    _('Unexpected condition of defined owner_id %(oid)s but '
+                      'undefined root_id for stack %(sid)s') %
+                    {'oid': self.owner_id, 'sid': self.id})
 
         if self.tags:
             stack_tag_object.StackTagList.set(self.context, self.id, self.tags)
