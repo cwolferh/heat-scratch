@@ -20,6 +20,96 @@ from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
 
 
+class TemplateResourceDeepNestTest(functional_base.FunctionalTestsBase):
+    """Prove that we can use the registry in a nested provider."""
+
+    def setUp(self):
+        super(TemplateResourceDeepNestTest, self).setUp()
+
+    def test_nested_create(self):
+        nested_templ = '''
+heat_template_version: 2013-05-23
+parameters:
+  param1:
+    type: string
+    default: %s
+resources:
+  res1:
+    type: %s
+    properties:
+      param1: {get_param: param1}
+outputs:
+  output:
+    value:
+      value: { get_attr: [res1, output] }
+'''
+
+        deepest_templ = '''
+heat_template_version: 2013-05-23
+parameters:
+  param1:
+    type: string
+resources:
+%s
+outputs:
+  output:
+    value: {get_attr: [test0, output]}
+    '''
+
+        env_templ = '''
+resource_registry:'''
+
+        env_templ += '''
+  "My::Deepest::Template": deepest.yaml
+'''
+
+        num_deepest_resources = 80
+        deepest_templ_res = "\n".join(['''  test%d:
+    type: OS::Heat::TestResource
+    properties:
+      value: {get_param: param1}''' % i for i in range(
+            num_deepest_resources)])
+
+        files = {'deepest.yaml': deepest_templ % deepest_templ_res}
+        depth = 5
+        for i in range(depth):
+            yaml_fname = 'nested%d.yaml' % i
+            res_name = 'My::Nested%d' % i
+            if i < depth - 1:
+                nested_res_name = 'My::Nested%d' % (i+1)
+            else:
+                nested_res_name = 'My::Deepest::Template'
+            files[yaml_fname] = nested_templ % ("param-default-%d" % i,
+                                                nested_res_name)
+            env_templ += '''
+  "%s": %s
+''' % (res_name, yaml_fname)
+
+        main_templ = files['nested0.yaml']
+
+        import datetime
+        the_avg = 0.0
+        num_iter = 50
+        for i in range(num_iter):
+            t1 = datetime.datetime.utcnow()
+            self.stack_create(
+                template=main_templ,
+                files=files,
+                environment=env_templ)
+            t2 = datetime.datetime.utcnow()
+            # nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+            #                                                'res1')
+            print("{0} seconds to create the stack".format(
+                ((t2 - t1).total_seconds())))
+            the_avg = the_avg + (t2 - t1).total_seconds()
+        
+        the_avg = the_avg / num_iter
+        print("{0} average seconds to create the stack".format(the_avg))
+        # import os; import time;
+        # while not os.path.exists('/tmp/cleanup'):
+        #     time.sleep(1)
+
+
 class TemplateResourceTest(functional_base.FunctionalTestsBase):
     """Prove that we can use the registry in a nested provider."""
 
