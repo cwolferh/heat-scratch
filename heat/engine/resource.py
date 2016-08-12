@@ -56,6 +56,9 @@ LOG = logging.getLogger(__name__)
 
 datetime = dt.datetime
 
+root_id_denom = 0.0
+root_id_total = 0.0
+
 
 def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
@@ -1627,7 +1630,16 @@ class Resource(object):
             resource_objects.Resource.encrypt_properties_data(
                 self._stored_properties_data))
         if not self.root_stack_id:
+            global root_id_denom
+            global root_id_total
+            root_id_denom += 1.0
+            d1 = datetime.utcnow()
             self.root_stack_id = self.stack.root_stack_id()
+            d2 = datetime.utcnow()
+            d_elapsed = (d2 - d1).total_seconds() * 1000.0
+            root_id_total += d_elapsed
+            LOG.info("root_stack_id() %f ms, average: %f" % (
+                d_elapsed, root_id_total / root_id_denom))
         try:
             rs = {'action': self.action,
                   'status': self.status,
