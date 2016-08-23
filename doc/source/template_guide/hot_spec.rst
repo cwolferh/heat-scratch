@@ -294,7 +294,8 @@ for the ``heat_template_version`` key:
     The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Pike release. This version adds the ``make_url`` function for
-    assembling URLs. The complete list of supported functions is::
+    assembling URLs and ``string_replace_vstrict`` which raises errors for
+    missing and empty params. The complete list of supported functions is::
 
       digest
       filter
@@ -310,6 +311,7 @@ for the ``heat_template_version`` key:
       resource_facade
       str_replace
       str_replace_strict
+      str_replace_vstrict
       str_split
       yaql
       if
@@ -1488,6 +1490,15 @@ str_replace_strict
 function, only an error is raised if any of the params are not present
 in the template. This may help catch typo's or other issues sooner
 rather than later when processing a template.
+
+
+str_replace_vstrict
+------------------
+``str_replace_vstrict`` behaves identically to the
+``str_replace_strict`` function, only an error is raised if any of the
+params are empty. This may help catch issues (i.e., prevent
+resources from being created with bogus values) sooner rather than later if
+it is known that all the params should be non-empty.
 
 
 str_split

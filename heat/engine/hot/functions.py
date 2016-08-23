@@ -360,6 +360,7 @@ class Replace(function.Function):
     """
 
     _strict = False
+    _allow_empty_value = True
 
     def __init__(self, stack, fn_name, args):
         super(Replace, self).__init__(stack, fn_name, args)
@@ -389,15 +390,16 @@ class Replace(function.Function):
         else:
             return mapping, string
 
-    def _validate_replacement(self, value):
+    def _validate_replacement(self, value, param):
         if value is None:
             return ''
 
         if not isinstance(value,
                           (six.string_types, six.integer_types,
                            float, bool)):
-            raise TypeError(_('"%s" params must be strings or numbers') %
-                            self.fn_name)
+            raise TypeError(_('"%(name)s" params must be strings or numbers, '
+                              'param %(param)s is not valid') %
+                            {'name': self.fn_name, 'param': param})
 
         return six.text_type(value)
 
@@ -424,7 +426,8 @@ class Replace(function.Function):
                                 self.fn_name)
 
             remaining_keys = keys[1:]
-            value = self._validate_replacement(mapping[placeholder])
+            value = self._validate_replacement(mapping[placeholder],
+                                               placeholder)
 
             def string_split(s):
                 ss = s.split(placeholder)
@@ -468,13 +471,25 @@ class ReplaceJson(Replace):
     being substituted in.
     """
 
-    def _validate_replacement(self, value):
+    def _validate_replacement(self, value, param):
+
+        def _raise_empty_param_value_error():
+            raise ValueError(
+                _('%(name)s has an undefined or empty value for param '
+                  '%(param)s, must be a defined non-empty value') %
+                {'name': self.fn_name, 'param': param})
+
         if value is None:
-            return ''
+            if self._allow_empty_value:
+                return ''
+            else:
+                _raise_empty_param_value_error()
 
         if not isinstance(value, (six.string_types, six.integer_types,
                                   float, bool)):
             if isinstance(value, (collections.Mapping, collections.Sequence)):
+                if not self._allow_empty_value and len(value) == 0:
+                    _raise_empty_param_value_error()
                 try:
                     return jsonutils.dumps(value, default=None, sort_keys=True)
                 except TypeError:
@@ -487,7 +502,10 @@ class ReplaceJson(Replace):
                 raise TypeError(_('"%s" params must be strings, numbers, '
                                   'list or map.') % self.fn_name)
 
-        return six.text_type(value)
+        ret_value = six.text_type(value)
+        if not self._allow_empty_value and not ret_value:
+            _raise_empty_param_value_error()
+        return ret_value
 
 
 class ReplaceJsonStrict(ReplaceJson):
@@ -497,9 +515,17 @@ class ReplaceJsonStrict(ReplaceJson):
     a ValueError is raised if any of the params are not present in
     the template.
     """
-
     _strict = True
 
+
+class ReplaceJsonVeryStrict(ReplaceJsonStrict):
+    """A function for performing string substituions.
+
+    str_replace_vstrict is identical to the str_replace_strict
+    function, only a ValueError is raised if any of the params are
+    None or empty.
+    """
+    _allow_empty_value = False
 
 class GetFile(function.Function):
     """A function for including a file inline.
