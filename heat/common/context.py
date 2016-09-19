@@ -15,7 +15,7 @@ from keystoneauth1 import access
 from keystoneauth1.identity import access as access_plugin
 from keystoneauth1.identity import generic
 from keystoneauth1 import loading as ks_loading
-from keystoneauth1 import session
+from keystoneauth1 import session as ks_session
 from keystoneauth1 import token_endpoint
 from oslo_config import cfg
 from oslo_context import context
@@ -24,6 +24,7 @@ import oslo_messaging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
 import six
+import threading
 
 from heat.common import config
 from heat.common import endpoint_utils
@@ -50,6 +51,8 @@ LOG = logging.getLogger(__name__)
 PASSWORD_PLUGIN = 'password'
 TRUSTEE_CONF_GROUP = 'trustee'
 ks_loading.register_auth_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
+
+strong_store = threading.local()
 
 
 def list_opts():
@@ -83,7 +86,7 @@ class RequestContext(context.RequestContext):
                  trustor_user_id=None, request_id=None, auth_token_info=None,
                  region_name=None, auth_plugin=None, trusts_auth_plugin=None,
                  user_domain_id=None, project_domain_id=None,
-                 project_name=None, **kwargs):
+                 project_name=None, session=None, **kwargs):
         """Initialisation of the request context.
 
         :param overwrite: Set to False to ensure that the greenthread local
@@ -109,9 +112,8 @@ class RequestContext(context.RequestContext):
         self.project_name = project_name
         self.auth_token_info = auth_token_info
         self.auth_url = auth_url
-        self._session = None
         self._clients = None
-        self._keystone_session = session.Session(
+        self._keystone_session = ks_session.Session(
             **config.get_ssl_options('keystone'))
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
@@ -123,6 +125,9 @@ class RequestContext(context.RequestContext):
             self.is_admin = self.policy.check_is_admin(self)
         else:
             self.is_admin = is_admin
+
+        if session:
+            self._session = session
 
         # context scoped cache dict where the key is a class of the type of
         # object being cached and the value is the cache implementation class
@@ -140,9 +145,15 @@ class RequestContext(context.RequestContext):
 
     @property
     def session(self):
-        if self._session is None:
-            self._session = db_api.get_session()
-        return self._session
+        # for unittests
+        if hasattr(self, '_session'):
+            if self._session == 'deferred':
+                self._session = db_api.get_session()
+            return self._session
+        # the real world
+        if not hasattr(strong_store, 'session'):
+            strong_store.session = db_api.get_session()
+        return strong_store.session
 
     @property
     def keystone_session(self):

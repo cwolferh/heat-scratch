@@ -74,19 +74,19 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
                   password='password', roles=None, user_id=None,
                   trust_id=None, region_name=None):
     roles = roles or []
-    return context.RequestContext.from_dict({
-        'tenant_id': tenant_id,
-        'tenant': 'test_tenant',
-        'username': user,
-        'user_id': user_id,
-        'password': password,
-        'roles': roles,
-        'is_admin': False,
-        'auth_url': 'http://server.test:5000/v2.0',
-        'auth_token': 'abcd1234',
-        'trust_id': trust_id,
-        'region_name': region_name
-    })
+    return context.RequestContext(
+        session='deferred',  # unittests only
+        tenant=tenant_id,
+        project_name='test_tenant',
+        username=user,
+        user=user_id,
+        password=password,
+        roles=roles,
+        is_admin=False,
+        auth_url='http://server.test:5000/v2.0',
+        auth_token='abcd1234',
+        trust_id=trust_id,
+        region_name=region_name)
 
 
 def parse_stack(t, params=None, files=None, stack_name=None,
