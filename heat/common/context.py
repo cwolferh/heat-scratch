@@ -150,6 +150,21 @@ class RequestContext(context.RequestContext):
             if self._session == 'deferred':
                 self._session = db_api.get_session()
             return self._session
+
+        # debug threading access
+        if not hasattr(self, 'mythreads'):
+            self.mythreads = set([threading.currentThread().ident])
+            self.lastthreads = [threading.currentThread().ident]
+        if threading.currentThread().ident not in self.mythreads:
+            self.mythreads.add(threading.currentThread().ident)
+            self.lastthreads.append(threading.currentThread().ident)
+        elif threading.currentThread().ident != self.lastthreads[-1]:
+            LOG.warn('CCW An older thread is accessing the session')
+            self.lastthreads.append(threading.currentThread().ident)
+            
+        LOG.info("CCW num threads that have used session: %d" % 
+             len(self.mythreads))
+        
         # the real world
         if not hasattr(strong_store, 'session'):
             strong_store.session = db_api.get_session()
