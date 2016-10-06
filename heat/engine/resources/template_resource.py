@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import hashlib
 import weakref
 
 from oslo_serialization import jsonutils
@@ -32,14 +33,23 @@ from heat.engine import template
 REMOTE_SCHEMES = ('http', 'https')
 LOCAL_SCHEMES = ('file',)
 
+_class_from_template = {}
+
 
 def generate_class_from_template(name, data, param_defaults):
+    m = hashlib.md5()
+    m.update(name)
+    m.update(data)
+    key = m.digest()
+    if key in _class_from_template:
+        return _class_from_template[key]
     tmpl = template.Template(template_format.parse(data))
     props, attrs = TemplateResource.get_schemas(tmpl, param_defaults)
     cls = type(name, (TemplateResource,),
                {'properties_schema': props,
                 'attributes_schema': attrs,
                 '__doc__': tmpl.t.get(tmpl.DESCRIPTION)})
+    _class_from_template[key] = cls
     return cls
 
 
