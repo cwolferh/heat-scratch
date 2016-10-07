@@ -13,7 +13,9 @@
 
 import collections
 import glob
+import hashlib
 import itertools
+import json
 import os.path
 import re
 import weakref
@@ -89,6 +91,25 @@ def is_valid_restricted_action(key, value):
 
     return valid_action
 
+_tri = {}
+
+
+def get_templ_res_info(registry, path, value):
+    # we actually only the need the registry.param_defaults
+    m = hashlib.md5()
+    m.update(''.join(path))
+    if value is not None:
+        m.update(value)
+    m.update(json.dumps(registry.as_dict(), sort_keys=True))
+    key = m.digest()
+    tri = _tri.get(key)
+    if tri is None:
+        tri = TemplateResourceInfo(registry, path, value)
+        _tri[key] = tri
+    else:
+        LOG.debug('cache hit get_templ_res_info '+','.join(path))
+    return tri
+
 
 class ResourceInfo(object):
     """Base mapping of resource type to implementation."""
@@ -103,7 +124,7 @@ class ResourceInfo(object):
         name = path[-1]
         if name.endswith(('.yaml', '.template')):
             # a template url for the resource "Type"
-            klass = TemplateResourceInfo
+            return get_templ_res_info(registry, path, value)
         elif not isinstance(value, six.string_types):
             klass = ClassResourceInfo
         elif value.endswith(('.yaml', '.template')):
