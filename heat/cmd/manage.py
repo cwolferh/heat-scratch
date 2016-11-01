@@ -28,6 +28,7 @@ from heat.common import messaging
 from heat.common import service_utils
 from heat.db import api as db_api
 from heat.db import utils
+from heat.db.sqlalchemy import models
 from heat.objects import service as service_objects
 from heat.rpc import client as rpc_client
 from heat import version
@@ -92,6 +93,98 @@ class ServiceManageCommand(object):
         remove_parser.set_defaults(func=ServiceManageCommand().service_clean)
 
 
+def raw_template_get_all(context):
+    from heat.db.sqlalchemy import api as sdb_api
+    stacks = sdb_api.soft_delete_aware_query(context, models.Stack)
+    template_ids = [stack.raw_template_id for stack in stacks]
+    results = context.session.query(
+        models.RawTemplate).filter(
+            models.RawTemplate.id.in_(template_ids)).all()
+    if not results:
+        raise exception.NotFound(_('raw templates not found'))
+    return results
+
+
+def do_investigate():
+    import json
+    ctxt = context.get_admin_context()
+    data = raw_template_get_all(ctxt)
+
+    def add_to_dict(d, s):
+        if s in d:
+            d[s] += 1
+        else:
+            d[s] = 0
+
+    def diff_dicts(d1, d2):
+        allkeys = set(d1.keys())
+        allkeys.update(d2.keys())
+        common_keys = 0
+        for k in sorted(allkeys):
+            if k in d1 and k not in d2:
+                print(" %s not in d2" % str(k))
+            elif k not in d1 and k in d2:
+                print(" %s not in d1" % str(k))
+            elif d1[k] != d2[k]:
+                v1 = str(d1[k])
+                v2 = str(d2[k])
+                if len(v1) > 68:
+                    v1 = v1[:68]+' <snip>'
+                if len(v2) > 68:
+                    v2 = v2[:68]+' <snip>'
+                print(" -%s:%s" % (k, d1[k]))
+                print(" +%s:%s" % (k, d2[k]))
+            else:
+                common_keys += 1
+        print("common_keys: %d" % (common_keys))
+
+    resource_registries = {}
+    param_defaults = {}
+    template_id_to_resource_registry = {}
+    count = 0
+    for rt in data:
+        count += 1
+        rreg_json = json.dumps(
+            rt.environment['resource_registry'], 
+            sort_keys=True)
+        template_id_to_resource_registry[rt.id] = \
+            rt.environment['resource_registry']
+        add_to_dict(resource_registries, rreg_json)
+        add_to_dict(param_defaults,
+                    json.dumps(
+                        rt.environment['parameter_defaults'],
+                        sort_keys=True))
+    print("%d raw_template rows" % count)
+    print("raw_template.environment has "
+          "%d distinct 'resource_registry's" 
+          % (len(resource_registries)))
+    print("raw_template.environment has "
+          "%d distinct 'parameter_defaults'" 
+          % (len(param_defaults)))
+    print("raw_template.environment parameter_defaults_lengths: "+
+           ','.join([str(len(p)) for p in param_defaults]))
+    print("raw_template.environment resource_registry lengths: "+
+           ','.join([str(len(p)) for p in resource_registries]))
+    #print("diff of parameter_defaults")
+    #(p1, c) = param_defaults.popitem()
+    #(p2, c) = param_defaults.popitem()
+    # sudo easy_install datadiff
+    #import datadiff
+    #print datadiff.diff(json.loads(p1), json.loads(p2))
+    
+    template_ids = sorted(template_id_to_resource_registry.keys())
+    for i in range(len(template_ids)-1):
+        tid1 = template_ids[i]
+        tid2 = template_ids[i+1]
+        print('diff of raw_template_id %d and %d' % (tid1, tid2))
+        diff_dicts(
+            template_id_to_resource_registry[tid1],
+            template_id_to_resource_registry[tid2])
+    #diff_dicts(
+    #    template_id_to_resource_registry[756],
+    #    template_id_to_resource_registry[755])
+
+
 def do_resource_data_list():
     ctxt = context.get_admin_context()
     data = db_api.resource_data_get_all(ctxt, CONF.command.resource_id)
@@ -149,6 +242,10 @@ def do_crypt_parameters_and_properties():
 
 
 def add_command_parsers(subparsers):
+    # one-off investigation
+    parser = subparsers.add_parser('investigate')
+    parser.set_defaults(func=do_investigate)
+
     # db_version parser
     parser = subparsers.add_parser('db_version')
     parser.set_defaults(func=do_db_version)
