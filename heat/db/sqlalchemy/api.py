@@ -439,10 +439,16 @@ def stack_get_by_name(context, stack_name):
 
 def stack_get(context, stack_id, show_deleted=False, eager_load=True):
     query = context.session.query(models.Stack)
-    if eager_load:
+    LOG.error('stack_get')
+    if True:
         query = query.options(orm.joinedload("raw_template"))
+        LOG.error('stack_get joinedload raw_template')
     result = query.get(stack_id)
-
+    if result:
+        LOG.error('stack_get raw_template_id is %s' % (str(result.raw_template_id)
+                                                       or "None"))
+        #LOG.error('stack_get raw_template %s' % str(result.raw_template))
+            
     deleted_ok = show_deleted or context.show_deleted
     if result is None or result.deleted_at is not None and not deleted_ok:
         return None
@@ -469,9 +475,12 @@ def stack_get_status(context, stack_id):
             result.updated_at)
 
 
-def stack_get_all_by_owner_id(context, owner_id):
-    results = soft_delete_aware_query(
-        context, models.Stack).filter_by(owner_id=owner_id).all()
+def stack_get_all_by_owner_id(context, owner_id, eager_load=True):
+    query = soft_delete_aware_query(
+        context, models.Stack).filter_by(owner_id=owner_id)
+    if eager_load:
+        query = query.options(orm.joinedload("raw_template")) 
+    results = query.all()
     return results
 
 

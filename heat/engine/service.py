@@ -956,6 +956,7 @@ class EngineService(service.Service):
         """
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
+        
         LOG.info(_LI('Updating stack %s'), db_stack.name)
         if cfg.CONF.reauthentication_auth_method == 'trusts':
             current_stack = parser.Stack.load(

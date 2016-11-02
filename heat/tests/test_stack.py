@@ -1681,7 +1681,7 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    def test_stack_eager_or_lazy_load_templ(self):
+    def test_stack_eager_load_templ(self):
         self.stack = stack.Stack(self.ctx, 'test_stack_eager_or_lazy_tmpl',
                                  self.tmpl)
         self.stack.store()
@@ -1697,11 +1697,14 @@ class StackTest(common.HeatTestCase):
         s2_db_result = db_api.stack_get(ctx2, self.stack.id, eager_load=False)
         s2_obj = stack_object.Stack._from_db_object(ctx2, stack_object.Stack(),
                                                     s2_db_result)
-        # _raw_template has not been set since it not eagerly loaded
-        self.assertFalse(hasattr(s2_obj, "_raw_template"))
-        # accessing raw_template lazy loads it
-        self.assertIsNotNone(s2_obj.raw_template)
-        self.assertIsNotNone(s2_obj._raw_template)
+        attr_ex = self.assertRaises(AttributeError, getattr, s2_obj,
+                                    'raw_template')
+        self.assertIn("stack.raw_template was not eager loaded for "
+                      "stack id %s" % s2_obj.id, six.text_type(attr_ex))
+
+        # verify we can set raw_template without an exception
+        s2_obj.raw_template = s1_obj.raw_template
+        self.assertEqual(s1_obj.raw_template, s2_obj.raw_template)
 
     def test_preview_resources_returns_list_of_resource_previews(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',

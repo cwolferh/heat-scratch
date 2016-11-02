@@ -28,6 +28,9 @@ from heat.objects import fields as heat_fields
 from heat.objects import raw_template
 from heat.objects import stack_tag
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
 
 class Stack(
     heat_base.HeatObject,
@@ -67,6 +70,7 @@ class Stack(
         for field in stack.fields:
             if field == 'raw_template_obj':
                 raw_template_obj = db_stack.__dict__.get('raw_template')
+                LOG.error('db_stack dict is %s' % str(db_stack.__dict__))
                 if raw_template_obj is not None:
                     # Object is already lazy loaded
                     raw_template_obj = (
@@ -75,6 +79,8 @@ class Stack(
                             raw_template.RawTemplate(),
                             raw_template_obj))
                     stack._raw_template = raw_template_obj
+                else:
+                    LOG.error('_from_db_object raw_template is None')
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context
@@ -85,16 +91,15 @@ class Stack(
     def raw_template(self):
         if hasattr(self, '_raw_template'):
             return self._raw_template
-        if self.raw_template_id is None:
-            self._raw_template = None
-        else:
-            self._raw_template = raw_template.RawTemplate.get_by_id(
-                self._context,
-                self['raw_template_id'])
-        return self._raw_template
+        #if self.raw_template_id is None:
+        #    return None  # Only happens in unittests
+        raise AttributeError("stack.raw_template was not eager loaded for "
+                             "stack id %s" % (self.id or "None"))
 
     @raw_template.setter
     def raw_template(self, value):
+        # NOTE(cwolfe): Even if raw_template was not eager loaded,
+        # it's OK to set it and then access it later.
         self['raw_template_obj'] = value
         self._raw_template = value
 
@@ -104,8 +109,10 @@ class Stack(
 
     @classmethod
     def get_by_id(cls, context, stack_id, **kwargs):
+        LOG.error('get_by_id kwargs are '+str(kwargs))
         db_stack = db_api.stack_get(context, stack_id, **kwargs)
         if not db_stack:
+            LOG.error('get_by_id returning None')            
             return None
         stack = cls._from_db_object(context, cls(context), db_stack)
         return stack

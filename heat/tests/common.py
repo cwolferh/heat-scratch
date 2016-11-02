@@ -43,7 +43,7 @@ from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN,
-                          'sqlalchemy': logging.WARN,
+                          'sqlalchemy': logging.DEBUG,
                           'heat.engine.environment': logging.ERROR}
 _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 _TRUE_VALUES = ('True', 'true', '1', 'yes')
