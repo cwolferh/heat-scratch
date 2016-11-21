@@ -18,6 +18,7 @@ import eventlet
 import functools
 import itertools
 import re
+import time
 import warnings
 
 from keystoneauth1 import exceptions as ks_exceptions
@@ -1283,6 +1284,7 @@ class Stack(collections.Mapping):
         if not any(leaves):
             self.mark_complete()
         else:
+            num_leaves = 0
             for rsrc_id, is_update in self.convergence_dependencies.leaves():
                 if is_update:
                     LOG.info(_LI("Triggering resource %s for update"), rsrc_id)
@@ -1294,6 +1296,11 @@ class Stack(collections.Mapping):
                                                   self.current_traversal,
                                                   input_data, is_update,
                                                   self.adopt_stack_data)
+                # temporary workaround, need to not DOS ourselves
+                # by opening too many db connections.
+                num_leaves += 1
+                if num_leaves > 5:
+                    time.sleep(.2)
 
     def rollback(self):
         old_tmpl_id = self.prev_raw_template_id
