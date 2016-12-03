@@ -734,10 +734,12 @@ def stack_get_root_id(context, stack_id):
 
 def stack_count_total_resources(context, stack_id):
     # count all resources which belong to the root stack
-    results = context.session.query(
-        models.Resource
-    ).filter(models.Resource.root_stack_id == stack_id).count()
-    return results
+    #LOG.logger.setLevel(0)
+    #LOG.warn('stack_count_total_resources BEGIN')
+    #func.count(
+    return context.session.query(
+        func.count(models.Resource.id)
+    ).filter_by(root_stack_id=stack_id).scalar()
 
 
 def user_creds_create(context):

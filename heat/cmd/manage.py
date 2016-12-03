@@ -147,8 +147,28 @@ def do_crypt_parameters_and_properties():
         utils.decrypt_parameters_and_properties(
             ctxt, prev_encryption_key, CONF.command.verbose_update_params)
 
+def count_res():
+    """Encrypt/decrypt hidden parameters and resource properties data."""
+    ctxt = context.get_admin_context()
+    print(str(db_api.stack_count_total_resources(
+        ctxt, '9b10934b-cb8a-40f4-b6dc-313eb9d48c5b')))
+    from datetime import datetime
+    d1 = datetime.utcnow()
+    count = 10000
+    for i in range(count):
+        db_api.stack_count_total_resources(
+            ctxt, '9b10934b-cb8a-40f4-b6dc-313eb9d48c5b')
+    d2 = datetime.utcnow()
+    d_elapsed = (d2 - d1).total_seconds() * 1000
+    print("stack_count_total_resources() average(ms): %f" % (
+        d_elapsed / count))
+    raise
 
 def add_command_parsers(subparsers):
+    # cwolfe test
+    parser = subparsers.add_parser('count_res')
+    parser.set_defaults(func=count_res)
+
     # db_version parser
     parser = subparsers.add_parser('db_version')
     parser.set_defaults(func=do_db_version)
@@ -229,6 +249,9 @@ def main():
         sys.exit("ERROR: %s" % e)
 
     try:
+        import logging
+        #sa_logging = logging.getLogger('sqlalchemy')
+        #sa_logging.setLevel(-1)
         CONF.command.func()
     except Exception as e:
         sys.exit("ERROR: %s" % e)
