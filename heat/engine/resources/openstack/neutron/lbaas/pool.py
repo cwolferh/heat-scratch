@@ -231,6 +231,7 @@ class Pool(neutron.NeutronResource):
 
         if not self._update_called:
             try:
+                self.clear_stored_attributes()
                 self.client().update_lbaas_pool(
                     self.resource_id, {'pool': prop_diff})
                 self._update_called = True

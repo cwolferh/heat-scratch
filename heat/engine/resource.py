@@ -253,6 +253,7 @@ class Resource(object):
         self.id = None
         self.uuid = None
         self._data = None
+        self._attr_data_id = None
         self._rsrc_metadata = None
         self._rsrc_prop_data = None
         self._stored_properties_data = None
@@ -295,6 +296,8 @@ class Resource(object):
                 self, resource.data)
         except exception.NotFound:
             self._data = {}
+        self.attributes.cached_attrs = resource.attr_data
+        self._attr_data_id = resource.attr_data_id
         self._rsrc_metadata = resource.rsrc_metadata
         self._stored_properties_data = resource.properties_data
         self._rsrc_prop_data = resource.rsrc_prop_data
@@ -869,6 +872,7 @@ class Resource(object):
         self._stored_properties_data = function.resolve(self.properties.data)
         if self._stored_properties_data != old_props:
             self._rsrc_prop_data = None
+            self.attributes.reset_resolved_values()
 
     def preview(self):
         """Default implementation of Resource.preview.
@@ -2020,6 +2024,33 @@ class Resource(object):
     def state(self):
         """Returns state, tuple of action, status."""
         return (self.action, self.status)
+
+    def store_attributes(self):
+        if self.id is None:
+            LOG.error(_LE('Attempting to store attributes before resource'))
+            return
+        if not (self.status in (Resource.COMPLETE) and
+                self.action not in (Resource.INIT, Resource.DELETE)):
+            return
+        if not self.attributes.has_new_cached_attrs():
+            return
+
+        try:
+            attr_data_id = resource_objects.Resource.store_attributes(
+                self.context, self.id, self.attributes.cached_attrs,
+                self._attr_data_id)
+            if attr_data_id is not None:
+                self._attr_data_id = attr_data_id
+        except Exception as ex:
+            LOG.error(_LE(
+                'store_attributes rsrc %(name)s %(id)s DB error %(ex)s'),
+                {'name': self.name, 'id': self.id, 'ex': ex})
+
+    def clear_stored_attributes(self):
+        if self._attr_data_id:
+            resource_objects.Resource.attr_data_delete(
+                self.context, self.id, self._attr_data_id)
+        self.attributes.reset_resolved_values()
 
     def get_reference_id(self):
         """Default implementation for function get_resource.

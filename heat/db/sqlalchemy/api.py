@@ -29,6 +29,7 @@ import six
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy import orm
 from sqlalchemy.orm import aliased as orm_aliased
 
@@ -263,6 +264,41 @@ def resource_delete(context, resource_id):
             session.delete(resource)
 
 
+def resource_attr_id_set(context, resource_id, attr_id):
+    session = context.session
+    with session.begin():
+        resource_ref = session.query(models.Resource).filter(and_(
+            models.Resource.id == resource_id,
+            or_(models.Resource.attr_data_id == attr_id,
+                models.Resource.attr_data_id.is_(None)))).first()
+        if resource_ref is not None:
+            if resource_ref.attr_data_id is None:
+                resource_ref.update({'attr_data_id': attr_id})
+            return True
+        else:
+            # Someone else set the attr_id first, so delete the
+            # resource_properties_data (attr) db row.
+            LOG.debug('Not updating res_id %(rid)s with attr_id %(aid)s',
+                      {'rid': resource_id, 'aid': attr_id})
+            attr_ref = session.query(
+                models.ResourcePropertiesData).get(attr_id)
+            if attr_ref:
+                session.delete(attr_ref)
+            return False
+
+
+def resource_attr_data_delete(context, resource_id, attr_id):
+    session = context.session
+    with session.begin(subtransactions=True):
+        resource = session.query(models.Resource).get(resource_id)
+        attr_prop_data = session.query(
+            models.ResourcePropertiesData).get(attr_id)
+        if resource:
+            resource.update({'attr_data_id': None})
+        if attr_prop_data:
+            session.delete(attr_prop_data)
+
+
 def resource_data_get_all(context, resource_id, data=None):
     """Looks up resource_data by resource.id.
 
@@ -433,11 +469,19 @@ def engine_get_all_locked_by_stack(context, stack_id):
     return set(i[0] for i in query.all())
 
 
-def resource_prop_data_create(context, values):
-    obj_ref = models.ResourcePropertiesData()
+def resource_prop_data_create_or_update(context, values, rpd_id=None):
+    if rpd_id is None:
+        obj_ref = models.ResourcePropertiesData()
+    else:
+        obj_ref = context.session.query(
+            models.ResourcePropertiesData).filter_by(id=rpd_id).first()
     obj_ref.update(values)
     obj_ref.save(context.session)
     return obj_ref
+
+
+def resource_prop_data_create(context, values):
+    return resource_prop_data_create_or_update(context, values)
 
 
 def resource_prop_data_get(context, resource_prop_data_id):

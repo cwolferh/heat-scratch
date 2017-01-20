@@ -251,6 +251,10 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                               min_adjustment_step,
                                               lower, upper)
 
+    def _resize(self, capacity):
+        self.resize(capacity)
+        self.clear_stored_attributes()  # allow InstanceList to be re-resolved
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Updates self.properties, if Properties has changed.
 
@@ -275,7 +279,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         capacity = grouputils.get_size(self)
         desired_capacity = self.properties[self.DESIRED_CAPACITY] or capacity
         new_capacity = self._get_new_capacity(capacity, desired_capacity)
-        self.resize(new_capacity)
+        self._resize(new_capacity)
 
     def adjust(self, adjustment,
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
@@ -312,7 +316,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         try:
             notification.send(**notif)
             try:
-                self.resize(new_capacity)
+                self._resize(new_capacity)
             except Exception as resize_ex:
                 with excutils.save_and_reraise_exception():
                     try:
