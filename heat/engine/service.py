@@ -528,8 +528,14 @@ class EngineService(service.ServiceBase):
         else:
             stacks = parser.Stack.load_all(cnxt)
 
-        return [api.format_stack(
+        retval = [api.format_stack(
             stack, resolve_outputs=resolve_outputs) for stack in stacks]
+        if resolve_outputs:
+            for stack in stacks:
+                if stack.convergence:
+                    for res in six.itervalues(stack.resources):
+                        res.store_attributes()
+        return retval
 
     def get_revision(self, cnxt):
         return cfg.CONF.revision['heat_revision']

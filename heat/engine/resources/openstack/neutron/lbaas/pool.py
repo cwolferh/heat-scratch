@@ -136,6 +136,7 @@ class Pool(neutron.NeutronResource):
         ),
         MEMBERS_ATTR: attributes.Schema(
             _('Members associated with this pool.'),
+            cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.LIST
         ),
     }
@@ -154,6 +155,8 @@ class Pool(neutron.NeutronResource):
 
     def __init__(self, name, definition, stack):
         super(Pool, self).__init__(name, definition, stack)
+        self.attributes_schema[self.SHOW].cache_mode = \
+            attributes.Schema.CACHE_NONE
         self._lb_id = None
 
     @property
