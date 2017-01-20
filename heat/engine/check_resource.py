@@ -230,7 +230,10 @@ class CheckResource(object):
                     cnxt, self._rpc_client, req, current_traversal,
                     set(graph[(req, fwd)]), graph_key, input_data, fwd,
                     stack.adopt_stack_data)
-
+            if is_update and input_forward_data is None:
+                # we haven't resolved attribute data for the resource,
+                # so clear any old attributes so they may be re-resolved
+                rsrc.clear_stored_attributes()
             check_stack_complete(cnxt, stack, current_traversal,
                                  graph_key[0], deps, graph_key[1])
         except exception.EntityNotFound as e:
@@ -326,6 +329,7 @@ def construct_input_data(rsrc, curr_stack):
                   'status': rsrc.status,
                   'action': rsrc.action,
                   'uuid': rsrc.uuid}
+    rsrc.store_attributes()
     return input_data
 
 

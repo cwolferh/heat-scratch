@@ -2534,7 +2534,7 @@ class DBAPIResourceTest(common.HeatTestCase):
 
         db_api.resource_purge_deleted(self.ctx, self.stack.id)
         self.assertRaises(exception.NotFound, db_api.resource_get,
-                          self.ctx, resource.id)
+                          utils.dummy_context(), resource.id)
 
     def test_engine_get_all_locked_by_stack(self):
         values = [

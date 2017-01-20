@@ -585,7 +585,7 @@ class ResourceTest(common.HeatTestCase):
                               enforce_type=True)
         data = {'p1': 'i see',
                 'p2': 'good times, good times'}
-        rpd_obj = rpd_object.ResourcePropertiesData().create(
+        rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
             self.stack.context, data)
         rpd_db_obj = self.stack.context.session.query(
             models.ResourcePropertiesData).get(rpd_obj.id)

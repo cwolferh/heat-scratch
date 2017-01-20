@@ -254,7 +254,8 @@ class EventTest(EventCommon):
                               enforce_type=True)
         data = {'p1': 'hello',
                 'p2': 'too soon?'}
-        rpd_obj = rpd_object.ResourcePropertiesData().create(self.ctx, data)
+        rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
+            self.ctx, data)
         rpd_db_obj = self.ctx.session.query(
             models.ResourcePropertiesData).get(rpd_obj.id)
         e_obj = event_object.Event().create(
