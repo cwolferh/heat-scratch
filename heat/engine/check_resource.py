@@ -194,6 +194,9 @@ class CheckResource(object):
         graph = deps.graph()
         graph_key = (resource_id, is_update)
 
+        LOG.error('propagate from res %(name)s (%(id)s, %(update)s',
+                  {'name': rsrc.name, 'id': resource_id,
+                   'update': str(is_update)})
         if graph_key not in graph and rsrc.replaces is not None:
             # If we are a replacement, impersonate the replaced resource for
             # the purposes of calculating whether subsequent resources are

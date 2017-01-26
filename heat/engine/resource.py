@@ -2036,9 +2036,14 @@ class Resource(object):
             return
 
         try:
+            debug_dict = self.attributes.cached_attrs.copy()
+            debug_dict['res_name_debug'] = self.name
             attr_data_id = resource_objects.Resource.store_attributes(
-                self.context, self.id, self.attributes.cached_attrs,
+                self.context, self.id, debug_dict,
                 self._attr_data_id)
+            LOG.error('store_attributes rsrc %(name)s %(id)s attrid %(aid)s',
+                      {'name': self.name, 'id': self.id,
+                       'aid': str(self._attr_data_id)})
             if attr_data_id is not None:
                 self._attr_data_id = attr_data_id
         except Exception as ex:
@@ -2047,7 +2052,9 @@ class Resource(object):
                 {'name': self.name, 'id': self.id, 'ex': ex})
 
     def clear_stored_attributes(self):
-        if self._attr_data_id:
+        LOG.error(_LE('clearing stored attributes for %(name)s %(id)s'),
+                  {'name': self.name, 'id': self.id})
+        if self._attr_data_id is not None:
             resource_objects.Resource.attr_data_delete(
                 self.context, self.id, self._attr_data_id)
         self.attributes.reset_resolved_values()

@@ -18,7 +18,6 @@ import six
 
 from heat.common.i18n import _
 from heat.common.i18n import _LW
-from heat.common.i18n import repr_wrapper
 from heat.engine import constraints as constr
 from heat.engine import support
 
@@ -133,7 +132,6 @@ def _stack_id_output(resource_name, template_type='cfn'):
         }
 
 
-@repr_wrapper
 class Attributes(collections.Mapping):
     """Models a collection of Resource Attributes."""
 
@@ -149,6 +147,10 @@ class Attributes(collections.Mapping):
         else:
             self._has_new_resolved = False
         self._resolved_values = {}
+
+    @property
+    def debug_str(self):
+        return 'CCW attrs-for-%s-%s' % (self._resource_name, self)
 
     @staticmethod
     def _make_attributes(schema):
@@ -231,6 +233,8 @@ class Attributes(collections.Mapping):
             self._resolved_values = {}
         else:
             self._resolved_values = c_attrs
+        LOG.error('%s setting resolved attrs to %s' %
+                  (self.debug_str, str(c_attrs)))
         self._has_new_resolved = False
 
     def has_new_cached_attrs(self):
@@ -241,11 +245,19 @@ class Attributes(collections.Mapping):
             raise KeyError(_('%(resource)s: Invalid attribute %(key)s') %
                            dict(resource=self._resource_name, key=key))
 
+        # LOG.error('%s attr %s get attr %s %s' %
+        #          (self.debug_str, self._resource_name, str(key),
+        #           'ERROR CCW '.join(traceback.format_stack(limit=6))))
         attrib = self._attributes.get(key)
         if attrib.schema.cache_mode == Schema.CACHE_NONE:
+            # LOG.error('%s Schema.CACHE_NONE, pretending otherwise' %
+            #          self.debug_str)
             return self._resolver(key)
 
         if key in self._resolved_values:
+            LOG.error('%s get self._resolved_values[%s]'
+                      % (self.debug_str, key))
+            # LOG.error('ERROR CCW '.join(traceback.format_stack(limit=6)))
             return self._resolved_values[key]
 
         value = self._resolver(key)
@@ -257,6 +269,8 @@ class Attributes(collections.Mapping):
             # on subsequent calls
             self._has_new_resolved = True
             self._resolved_values[key] = value
+            LOG.error('%s set self._resolved_values %s : %s' %
+                      (self.debug_str, key, value))
         return value
 
     def __len__(self):
@@ -268,9 +282,9 @@ class Attributes(collections.Mapping):
     def __iter__(self):
         return iter(self._attributes)
 
-    def __repr__(self):
-        return ("Attributes for %s:\n\t" % self._resource_name +
-                '\n\t'.join(six.itervalues(self)))
+#    def __repr__(self):
+#        return ("Attributes for %s:\n\t" % self._resource_name +
+#                '\n\t'.join(six.itervalues(self)))
 
 
 class DynamicSchemeAttributes(Attributes):
