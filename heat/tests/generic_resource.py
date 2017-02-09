@@ -160,6 +160,7 @@ class ResourceWithProps(GenericResource):
     properties_schema = {
         'Foo': properties.Schema(properties.Schema.STRING),
         'FooInt': properties.Schema(properties.Schema.INTEGER)}
+    atomic_key = None
 
 
 class ResourceWithPropsRefPropOnDelete(ResourceWithProps):

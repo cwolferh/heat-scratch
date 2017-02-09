@@ -684,7 +684,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
                                          'WebServer', True,
                                          resource_status_reason="")
 
-        mock_acquire.assert_called_once_with(self.eng.engine_id)
+        mock_acquire.assert_called_once_with()
 
     @tools.stack_context('service_mark_unhealthy_lockexc_converge_test_stk',
                          convergence=True)
