@@ -18,6 +18,7 @@ import functools
 import hashlib
 import warnings
 
+from oslo_log import log as logging
 import six
 from stevedore import extension
 
@@ -31,6 +32,8 @@ from heat.engine import template_files
 from heat.objects import raw_template as template_object
 
 __all__ = ['Template']
+
+LOG = logging.getLogger(__name__)
 
 
 _template_classes = None
@@ -293,7 +296,7 @@ class Template(collections.Mapping):
         return dict(get_outputs())
 
     @abc.abstractmethod
-    def resource_definitions(self, stack):
+    def resource_definitions(self, stack, only_resource=None):
         """Return a dictionary of ResourceDefinition objects."""
         pass
 

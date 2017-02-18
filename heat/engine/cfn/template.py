@@ -13,6 +13,7 @@
 
 import functools
 
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -23,6 +24,8 @@ from heat.engine import function
 from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template_common
+
+LOG = logging.getLogger(__name__)
 
 
 class CfnTemplateBase(template_common.CommonTemplate):
@@ -110,8 +113,13 @@ class CfnTemplateBase(template_common.CommonTemplate):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
-    def resource_definitions(self, stack):
-        resources = self.t.get(self.RESOURCES) or {}
+    def resource_definitions(self, stack, only_resource=None):
+        if only_resource is not None:
+            LOG.debug(_('only loading rsrc defn for %s'), only_resource)
+            resources = {only_resource: self.t.get(
+                self.RESOURCES)[only_resource]}
+        else:
+            resources = self.t.get(self.RESOURCES) or {}
 
         conditions = self.conditions(stack)
 

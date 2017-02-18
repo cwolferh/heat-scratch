@@ -296,7 +296,7 @@ def load_resource(cnxt, resource_id, resource_data, is_update):
 
     try:
         return resource.Resource.load(cnxt, resource_id,
-                                      is_update, cache_data)
+                                      is_update, cache_data, True)
     except (exception.ResourceNotFound, exception.NotFound):
         # can be ignored
         return None, None, None

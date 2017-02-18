@@ -322,7 +322,8 @@ class Resource(object):
         self._stackref = weakref.ref(stack)
 
     @classmethod
-    def load(cls, context, resource_id, is_update, data):
+    def load(cls, context, resource_id, is_update, data,
+             only_this_resource=False):
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
         curr_stack = stack_mod.Stack.load(context, stack_id=db_res.stack_id,
@@ -337,10 +338,14 @@ class Resource(object):
             resource_owning_stack = stack_mod.Stack.load(context,
                                                          stack=db_stack)
 
+        if only_this_resource:
+            only_resource = db_res.name
+        else:
+            only_resource = None
         # Load only the resource in question; don't load all resources
         # by invoking stack.resources. Maintain light-weight stack.
         res_defn = resource_owning_stack.t.resource_definitions(
-            resource_owning_stack)[db_res.name]
+            resource_owning_stack, only_resource)[db_res.name]
         resource = cls(db_res.name, res_defn, resource_owning_stack)
         resource._load_data(db_res)
 
