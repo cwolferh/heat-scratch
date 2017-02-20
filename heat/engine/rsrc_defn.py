@@ -26,7 +26,7 @@ from heat.engine import properties
 __all__ = ['ResourceDefinition']
 
 
-@repr_wrapper
+# @repr_wrapper
 class ResourceDefinition(object):
     """A definition of a resource, independent of any template format."""
 
@@ -349,21 +349,21 @@ class ResourceDefinition(object):
         """
         return self._hash
 
-    def __repr__(self):
-        """Return a string representation of the resource definition."""
-
-        def arg_repr(arg_name):
-            return '='.join([arg_name, repr(getattr(self, '_%s' % arg_name))])
-
-        args = ('properties', 'metadata', 'depends',
-                'deletion_policy', 'update_policy', 'condition')
-        data = {
-            'classname': type(self).__name__,
-            'name': repr(self.name),
-            'type': repr(self.resource_type),
-            'args': ', '.join(arg_repr(n) for n in args)
-        }
-        return '%(classname)s(%(name)s, %(type)s, %(args)s)' % data
+    #def __repr__(self):
+    #    """Return a string representation of the resource definition."""
+    #
+    #    def arg_repr(arg_name):
+    #        return '='.join([arg_name, repr(getattr(self, '_%s' % arg_name))])
+    #
+    #    args = ('properties', 'metadata', 'depends',
+    #            'deletion_policy', 'update_policy', 'condition')
+    #    data = {
+    #        'classname': type(self).__name__,
+    #        'name': repr(self.name),
+    #        'type': repr(self.resource_type),
+    #        'args': ', '.join(arg_repr(n) for n in args)
+    #    }
+    #    return '%(classname)s(%(name)s, %(type)s, %(args)s)' % data
 
 
 def _hash_data(data):

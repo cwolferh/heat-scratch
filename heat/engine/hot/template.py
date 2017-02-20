@@ -265,8 +265,11 @@ class HOTemplate20130523(template_common.CommonTemplate):
                         continue
 
                 yield name, defn
-
-        return dict(defns())
+        retval = dict(defns())
+        LOG.error('defns are '+str(retval))
+        import traceback
+        LOG.debug(''.join(traceback.format_stack(limit=20)))
+        return retval
 
     def add_resource(self, definition, name=None):
         if name is None:
