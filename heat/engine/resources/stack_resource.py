@@ -41,6 +41,33 @@ from heat.rpc import api as rpc_api
 LOG = logging.getLogger(__name__)
 
 
+def cache_get_attribute(func):
+    def get_attribute_wrapper(self, key, *path):
+        full_key = key
+        LOG.error('key is '+str(key))
+        if len(path):
+            for step in path:
+                full_key += "."
+                if step is not None:
+                    full_key += "%s" % step
+        LOG.error('get_attribute for %s', full_key)
+        if (self.attributes.cached_attrs is not None and 
+            full_key in self.attributes.cached_attrs):
+            LOG.error('full_key hit %s', full_key)
+            return full_key
+        attr_val = func(self, key, *path)
+        if self.attributes.cached_attrs is None:
+            self.attributes.cached_attrs = {full_key: attr_val}
+        else:
+            self.attributes.cached_attrs[full_key] = attr_val
+        self.attributes._has_new_resolved = True
+        LOG.error('attributes for %s:%s are %s' % 
+                  (self.name, self.id, str(self.attributes.cached_attrs)))
+        return attr_val
+
+    return get_attribute_wrapper
+
+
 class StackResource(resource.Resource):
     """Allows entire stack to be managed as a resource in a parent stack.
 

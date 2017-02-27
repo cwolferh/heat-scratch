@@ -304,6 +304,7 @@ class TemplateResource(stack_resource.StackResource):
         except exception.InvalidTemplateAttribute:
             return self.nested_identifier().arn()
 
+    @stack_resource.cache_get_attribute
     def get_attribute(self, key, *path):
         if self.resource_id is None:
             return None
