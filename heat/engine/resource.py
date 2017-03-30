@@ -15,6 +15,7 @@ import base64
 import contextlib
 import datetime as dt
 import pydoc
+import tenacity
 import weakref
 
 from oslo_config import cfg
@@ -778,8 +779,29 @@ class Resource(status.ResourceStatus):
         else:
             lock_acquire = lock_release = self.LOCK_NONE
 
-        try:
+        _not_first_iter_flag = {}  # work around no nonlocal in py27
+
+        # retry for convergence DELETE or UPDATE if we get the usual
+        # lock-acquire exception of exception.UpdateInProgress
+        @tenacity.retry(
+            stop=tenacity.stop_after_attempt(
+                1 + self.stack.convergence *
+                (action in (self.DELETE, self.UPDATE)) *
+                max(cfg.CONF.client_retry_limit, 0)),
+            retry=tenacity.retry_if_exception_type(
+                exception.UpdateInProgress),
+            wait=tenacity.wait_random(min=0.1, max=2),
+            reraise=True)
+        def set_in_progress():
+            if _not_first_iter_flag:
+                res_obj = resource_objects.Resource.get_obj(
+                    self.context, self.id)
+                self._atomic_key = res_obj.atomic_key
+            _not_first_iter_flag[1] = 1
             self.state_set(action, self.IN_PROGRESS, lock=lock_acquire)
+
+        try:
+            set_in_progress()
             yield
         except exception.UpdateInProgress as ex:
             with excutils.save_and_reraise_exception():
